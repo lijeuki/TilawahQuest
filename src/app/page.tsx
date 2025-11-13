@@ -5,7 +5,7 @@ import { Mic, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
@@ -25,37 +25,37 @@ export default function Home() {
 
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardHeader>
               <Mic className="h-12 w-12 text-emerald-600 mb-2" />
-              <CardTitle>Record & Recognize</CardTitle>
+              <CardTitle className="text-gray-900">Record & Recognize</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-gray-600">
                 Record your recitation and our AI will identify which ayah you&apos;re reciting with high accuracy
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardHeader>
               <BookOpen className="h-12 w-12 text-teal-600 mb-2" />
-              <CardTitle>Instant Feedback</CardTitle>
+              <CardTitle className="text-gray-900">Instant Feedback</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-gray-600">
                 Get immediate feedback showing the correct Arabic text and pronunciation guidance
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white border-gray-200">
             <CardHeader>
               <TrendingUp className="h-12 w-12 text-cyan-600 mb-2" />
-              <CardTitle>Track Progress</CardTitle>
+              <CardTitle className="text-gray-900">Track Progress</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-gray-600">
                 Monitor your practice sessions and see improvements in your recitation accuracy over time
               </CardDescription>
             </CardContent>
@@ -64,44 +64,44 @@ export default function Home() {
 
         {/* How It Works */}
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">How It Works</h2>
           <div className="space-y-4">
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="flex items-center p-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 font-bold mr-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 font-bold mr-4">
                   1
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Click to Record</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-gray-900">Click to Record</h3>
+                  <p className="text-sm text-gray-600">
                     Grant microphone permission and click the record button
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="flex items-center p-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-400 font-bold mr-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 font-bold mr-4">
                   2
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Recite Any Ayah</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-gray-900">Recite Any Ayah</h3>
+                  <p className="text-sm text-gray-600">
                     Recite any verse from the Quran clearly (up to 30 seconds)
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="flex items-center p-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-900 text-cyan-600 dark:text-cyan-400 font-bold mr-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-cyan-100 text-cyan-600 font-bold mr-4">
                   3
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Get Results</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold mb-1 text-gray-900">Get Results</h3>
+                  <p className="text-sm text-gray-600">
                     See the identified ayah, confidence score, and correct Arabic text
                   </p>
                 </div>

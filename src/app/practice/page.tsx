@@ -1,222 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LiveRecorderComponent } from '@/components/audio/live-recorder';
+import { SurahSelector } from '@/components/quran/surah-selector';
+import { AyahPractice } from '@/components/quran/ayah-practice';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AudioRecorderComponent } from '@/components/audio/audio-recorder';
-import { SpeechRecognizer } from '@/lib/audio/speech-recognition';
-import { matchAyah } from '@/lib/quran/matcher';
-import { getSurahByNumber } from '@/lib/quran/data';
-import type { AudioRecording } from '@/types/quran';
-import { Loader2 } from 'lucide-react';
+import { BookOpen, Mic } from 'lucide-react';
+import { getQuranData } from '@/lib/quran/data';
+import type { Surah, Ayah } from '@/types/quran';
+
+type PracticeMode = 'select' | 'free' | 'surah';
 
 export default function PracticePage() {
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Live Recitation Practice</h1>
-        <p className="text-muted-foreground">
-          Recite any Quran verse and see real-time recognition just like Tarteel
-        </p>
-      </div>
+  const [mode, setMode] = useState<PracticeMode>('select');
+  const [selectedSurah, setSelectedSurah] = useState<Surah | null>(null);
+  const [surahAyahs, setSurahAyahs] = useState<Ayah[]>([]);
 
-      <LiveRecorderComponent />
-
-      {/* Info Card */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">How it works</CardTitle>
-          <CardDescription>
-            <ul className="list-disc list-inside space-y-2 mt-2">
-              <li>Click the microphone button to start</li>
-              <li>Start reciting any ayah from the Quran</li>
-              <li>Watch as the app recognizes your recitation in real-time</li>
-              <li>See the matching ayah and confidence score instantly</li>
-              <li>Click stop when finished to see final results</li>
-            </ul>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    </div>
-  );
-}
-
-// Old implementation with post-recording analysis
-export function PracticePageOld() {
-  // This is the old "record then analyze" approach
-  // Keeping it for reference but using LiveRecorderComponent above
-  return null;
-}
-
-function OldRecordingApproach() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleRecordingComplete = async (recording: any) => {
-    setIsProcessing(true);
-    setError(null);
-    setResults(null);
-
-    try {
-      // Step 1: Convert audio to text using Web Speech API
-      const recognizer = new SpeechRecognizer();
-      
-      if (!recognizer.isSupported()) {
-        throw new Error('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
-      }
-
-      const recognizedText = await recognizer.recognizeFromBlob(recording.blob);
-      console.log('Recognized text:', recognizedText);
-
-      // Step 2: Match against Quran database
-      const candidates = await matchAyah(recognizedText);
-
-      if (candidates.length === 0) {
-        setError('Could not match any ayah. Please try reciting more clearly.');
-        return;
-      }
-
-      // Get the best match
-      const bestMatch = candidates[0];
-      const surah = getSurahByNumber(bestMatch.ayah.surah);
-
-      setResults({
-        recognizedText,
-        bestMatch,
-        surah,
-        allCandidates: candidates
-      });
-
-    } catch (err: any) {
-      console.error('Processing error:', err);
-      setError(err.message || 'Failed to process recording. Please try again.');
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (selectedSurah) {
+      loadSurahAyahs(selectedSurah.number);
     }
+  }, [selectedSurah]);
+
+  const loadSurahAyahs = async (surahNumber: number) => {
+    const data = await getQuranData();
+    const ayahs = data.ayahs.filter(ayah => ayah.surah === surahNumber);
+    setSurahAyahs(ayahs);
+    setMode('surah');
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Practice Recitation</h1>
-        <p className="text-muted-foreground">
-          Record your Quran recitation and get instant feedback
-        </p>
-      </div>
+  const handleSelectSurah = (surah: Surah) => {
+    setSelectedSurah(surah);
+  };
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Record Your Recitation</CardTitle>
-          <CardDescription>
-            Recite any ayah from the Quran. The app will identify which ayah you&apos;re reciting.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center py-8">
-          <AudioRecorderComponent
-            onRecordingComplete={handleRecordingComplete}
-            disabled={isProcessing}
-          />
-        </CardContent>
-      </Card>
+  const handleBackToSelect = () => {
+    setMode('select');
+    setSelectedSurah(null);
+    setSurahAyahs([]);
+  };
 
-      {isProcessing && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p className="text-lg font-medium">Processing your recitation...</p>
-            <p className="text-sm text-muted-foreground">This may take a few seconds</p>
-          </CardContent>
-        </Card>
-      )}
+  if (mode === 'free') {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-6">
+            <Button variant="outline" onClick={() => setMode('select')} className="border-gray-300">
+              ← Back to Mode Selection
+            </Button>
+          </div>
 
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-lg font-semibold text-destructive mb-2">Error</p>
-              <p className="text-sm">{error}</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => setError(null)}
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold mb-2 text-gray-900">Free Practice Mode</h1>
+            <p className="text-gray-600">
+              Recite any ayah and see real-time recognition
+            </p>
+          </div>
 
-      {results && (
-        <div className="space-y-4">
-          <Card className="border-green-500">
+          <LiveRecorderComponent />
+
+          <Card className="mt-6 bg-white border-gray-200">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Recognition Results</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  Confidence: {results.bestMatch.confidence.toFixed(1)}%
-                </span>
-              </CardTitle>
+              <CardTitle className="text-lg text-gray-900">How it works</CardTitle>
+              <CardDescription className="text-gray-600">
+                <ul className="list-disc list-inside space-y-2 mt-2">
+                  <li>Click the microphone button to start</li>
+                  <li>Start reciting any ayah from the Quran</li>
+                  <li>Watch as the app recognizes your recitation in real-time</li>
+                  <li>See the matching ayah and confidence score instantly</li>
+                </ul>
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'surah' && selectedSurah && surahAyahs.length > 0) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <AyahPractice 
+            surah={selectedSurah} 
+            ayahs={surahAyahs}
+            onBack={handleBackToSelect}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Mode selection
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold mb-2 text-gray-900">Quran Recitation Practice</h1>
+          <p className="text-gray-600">
+            Choose your practice mode: structured surah-by-surah or free practice
+          </p>
+        </div>
+
+        {/* Mode Selection */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+          <Card 
+            className="bg-white border-2 border-gray-200 hover:border-emerald-500 cursor-pointer transition-all group"
+            onClick={() => setMode('select')}
+          >
+            <CardHeader>
+              <BookOpen className="h-12 w-12 text-emerald-600 mb-3 group-hover:scale-110 transition-transform" />
+              <CardTitle className="text-xl text-gray-900">Surah-by-Surah</CardTitle>
+              <CardDescription className="text-gray-600">
+                <span className="font-semibold text-emerald-600">Recommended</span> - Practice ayah by ayah with word-by-word verification and highlighting
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    What we heard:
-                  </p>
-                  <p className="text-lg" dir="rtl">{results.recognizedText}</p>
-                </div>
-
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Identified Ayah:
-                  </p>
-                  <p className="text-xl font-semibold mb-1">
-                    {results.surah?.englishName} - Ayah {results.bestMatch.ayah.numberInSurah}
-                  </p>
-                  <p className="text-lg mb-2" dir="rtl">
-                    {results.surah?.name}
-                  </p>
-                  <p className="text-2xl leading-relaxed" dir="rtl">
-                    {results.bestMatch.ayah.text}
-                  </p>
-                </div>
-
-                {results.allCandidates.length > 1 && (
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
-                      Other possible matches:
-                    </p>
-                    <div className="space-y-2">
-                      {results.allCandidates.slice(1).map((candidate: any, idx: number) => {
-                        const surah = getSurahByNumber(candidate.ayah.surah);
-                        return (
-                          <div key={idx} className="text-sm p-2 bg-muted rounded">
-                            <p className="font-medium">
-                              {surah?.englishName} {candidate.ayah.numberInSurah} 
-                              <span className="text-muted-foreground ml-2">
-                                ({candidate.confidence.toFixed(1)}%)
-                              </span>
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2">✓</span>
+                  Choose specific surah to practice
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2">✓</span>
+                  Word-by-word mistake detection
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2">✓</span>
+                  Highlighted corrections
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2">✓</span>
+                  Progress tracking
+                </li>
+              </ul>
+              <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700">
+                Start Structured Practice
+              </Button>
             </CardContent>
           </Card>
 
-          <div className="flex justify-center gap-4">
-            <Button onClick={() => setResults(null)}>
-              Record Another
-            </Button>
-          </div>
+          <Card 
+            className="bg-white border-2 border-gray-200 hover:border-teal-500 cursor-pointer transition-all group"
+            onClick={() => setMode('free')}
+          >
+            <CardHeader>
+              <Mic className="h-12 w-12 text-teal-600 mb-3 group-hover:scale-110 transition-transform" />
+              <CardTitle className="text-xl text-gray-900">Free Practice</CardTitle>
+              <CardDescription className="text-gray-600">
+                Recite any ayah freely with live recognition and instant feedback
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li className="flex items-start">
+                  <span className="text-teal-600 mr-2">✓</span>
+                  Recite any ayah from memory
+                </li>
+                <li className="flex items-start">
+                  <span className="text-teal-600 mr-2">✓</span>
+                  Real-time recognition
+                </li>
+                <li className="flex items-start">
+                  <span className="text-teal-600 mr-2">✓</span>
+                  Instant ayah identification
+                </li>
+                <li className="flex items-start">
+                  <span className="text-teal-600 mr-2">✓</span>
+                  Quick confidence scoring
+                </li>
+              </ul>
+              <Button className="w-full mt-4 bg-teal-600 hover:bg-teal-700">
+                Start Free Practice
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      )}
+
+        {/* Surah Selection (when mode is 'select') */}
+        {mode === 'select' && (
+          <div className="max-w-4xl mx-auto">
+            <SurahSelector onSelectSurah={handleSelectSurah} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
