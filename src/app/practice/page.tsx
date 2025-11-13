@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { AudioRecorderComponent } from '@/components/audio/audio-recorder';
-import { Button } from '@/components/ui/button';
+import { LiveRecorderComponent } from '@/components/audio/live-recorder';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AudioRecorderComponent } from '@/components/audio/audio-recorder';
 import { SpeechRecognizer } from '@/lib/audio/speech-recognition';
 import { matchAyah } from '@/lib/quran/matcher';
 import { getSurahByNumber } from '@/lib/quran/data';
@@ -11,11 +12,49 @@ import type { AudioRecording } from '@/types/quran';
 import { Loader2 } from 'lucide-react';
 
 export default function PracticePage() {
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold mb-2">Live Recitation Practice</h1>
+        <p className="text-muted-foreground">
+          Recite any Quran verse and see real-time recognition just like Tarteel
+        </p>
+      </div>
+
+      <LiveRecorderComponent />
+
+      {/* Info Card */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg">How it works</CardTitle>
+          <CardDescription>
+            <ul className="list-disc list-inside space-y-2 mt-2">
+              <li>Click the microphone button to start</li>
+              <li>Start reciting any ayah from the Quran</li>
+              <li>Watch as the app recognizes your recitation in real-time</li>
+              <li>See the matching ayah and confidence score instantly</li>
+              <li>Click stop when finished to see final results</li>
+            </ul>
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+// Old implementation with post-recording analysis
+export function PracticePageOld() {
+  // This is the old "record then analyze" approach
+  // Keeping it for reference but using LiveRecorderComponent above
+  return null;
+}
+
+function OldRecordingApproach() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleRecordingComplete = async (recording: AudioRecording) => {
+  const handleRecordingComplete = async (recording: any) => {
     setIsProcessing(true);
     setError(null);
     setResults(null);

@@ -1,16 +1,16 @@
 import type { Ayah, Surah } from '@/types/quran';
 import { surahs } from '@/data/surahs';
+import quranDataJson from '@/data/quran.json';
 
-// Placeholder - will be replaced with actual Quran data
+// Cache for Quran data
 let quranCache: { ayahs: Ayah[], surahs: Surah[] } | null = null;
 
 export async function getQuranData() {
   if (quranCache) return quranCache;
 
-  // TODO: Load actual Quran data from JSON file or API
-  // For now, returning minimal structure
+  // Load complete Quran data (6,236 ayahs)
   quranCache = {
-    ayahs: [], // Will be populated with actual data
+    ayahs: quranDataJson.ayahs as Ayah[],
     surahs: surahs
   };
 
