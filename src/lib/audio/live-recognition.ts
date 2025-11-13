@@ -86,18 +86,29 @@ export class LiveRecognition {
     };
 
     this.recognition.onend = async () => {
-      // Final match when recognition ends
-      if (this.accumulatedText && this.onUpdate) {
-        const matches = await matchAyah(this.accumulatedText);
-        this.onUpdate({
-          text: this.accumulatedText.trim(),
-          partialText: '',
-          matches,
-          isComplete: true
-        });
-      }
+      console.log('🛑 Recognition ended');
       
-      this.isActive = false;
+      // Restart if still supposed to be active (continuous mode)
+      if (this.isActive) {
+        console.log('🔄 Restarting recognition...');
+        try {
+          this.recognition.start();
+        } catch (error) {
+          console.error('Failed to restart recognition:', error);
+          this.isActive = false;
+        }
+      } else {
+        // Final match when recognition truly ends
+        if (this.accumulatedText && this.onUpdate) {
+          const matches = await matchAyah(this.accumulatedText);
+          this.onUpdate({
+            text: this.accumulatedText.trim(),
+            partialText: '',
+            matches,
+            isComplete: true
+          });
+        }
+      }
     };
   }
 

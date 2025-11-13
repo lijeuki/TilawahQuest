@@ -110,52 +110,66 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
       liveRecognition.current.start(
         (result: LiveRecognitionResult) => {
           const fullText = result.text.trim();
-          console.log('📝 Recognition:', fullText);
-          console.log('🔄 Partial:', result.partialText);
+          const partialText = result.partialText.trim();
+          
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('📝 Accumulated Text:', fullText);
+          console.log('🔄 Partial Text:', partialText);
+          console.log('📍 Current Ayah:', currentAyahInRecitation + 1);
           
           // Only process if we have enough text
-          if (fullText.length < 3) {
+          if (fullText.length < 3 && partialText.length < 3) {
+            console.log('⏭️ Skipping: Text too short');
             return;
           }
           
           // Match against current session ayahs
-          const textToMatch = (result.text + ' ' + result.partialText).trim();
+          const textToMatch = (fullText + ' ' + partialText).trim();
+          console.log('🎯 Text to Match:', textToMatch.substring(0, 50) + '...');
           
           // Find the best matching ayah
           let bestMatch = { index: -1, accuracy: 0, verification: null as any };
+          let allScores: any[] = [];
           
           sessionAyahs.forEach((ayah, index) => {
             const globalIndex = startIndex + index;
-            
-            // Allow re-checking all ayahs to catch when user moves forward
             const existingResult = sessionResults.get(globalIndex);
-            
-            // Only skip if we're absolutely certain (98%+) and it's not the next expected ayah
-            const isNextExpected = index === currentAyahInRecitation || index === currentAyahInRecitation + 1;
-            if (existingResult && existingResult.accuracy >= 98 && !isNextExpected) {
-              return;
-            }
             
             const verification = verifyAyahRecitation(textToMatch, ayah.text);
             
-            console.log(`   Ayah ${index + 1}: ${verification.accuracy.toFixed(1)}%`);
+            // Store all scores for debugging
+            allScores.push({
+              index: index + 1,
+              accuracy: verification.accuracy,
+              existing: existingResult?.accuracy || 0
+            });
             
-            // Track best match with minimum threshold
-            if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 50) {
+            // Track best match with lower threshold for better detection
+            if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 40) {
               bestMatch = { index, accuracy: verification.accuracy, verification };
             }
           });
+          
+          // Show all scores
+          console.table(allScores);
           
           // Store the best match if found
           if (bestMatch.index >= 0 && bestMatch.verification) {
             const globalIndex = startIndex + bestMatch.index;
             const existingResult = sessionResults.get(globalIndex);
             
-            // Only update if this is a better match than what we had
-            const shouldUpdate = !existingResult || bestMatch.accuracy > existingResult.accuracy;
+            // Update if:
+            // 1. No existing result, OR
+            // 2. Better accuracy, OR
+            // 3. It's the next expected ayah (to catch progression)
+            const isProgression = bestMatch.index === currentAyahInRecitation + 1;
+            const isBetterMatch = !existingResult || bestMatch.accuracy > existingResult.accuracy;
+            const shouldUpdate = isBetterMatch || (isProgression && bestMatch.accuracy > 45);
             
             if (shouldUpdate) {
               console.log(`✅ MATCHED: Ayah ${bestMatch.index + 1} with ${bestMatch.accuracy.toFixed(1)}%`);
+              console.log(`   Previous was: Ayah ${currentAyahInRecitation + 1}`);
+              console.log(`   Is Progression: ${isProgression}`);
               
               setSessionResults(prev => {
                 const newMap = new Map(prev);
@@ -168,7 +182,11 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
                 return newMap;
               });
               setCurrentAyahInRecitation(bestMatch.index);
+            } else {
+              console.log(`⏸️ Not updating - current match at ${currentAyahInRecitation + 1} is better`);
             }
+          } else {
+            console.log('❌ No match found above threshold (40%)');
           }
         },
         (error) => {
