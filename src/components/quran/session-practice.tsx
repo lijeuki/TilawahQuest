@@ -23,11 +23,12 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
   const [currentSession, setCurrentSession] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isPlayingReference, setIsPlayingReference] = useState(false);
-  const [currentAyahInRecitation, setCurrentAyahInRecitation] = useState(0);
+  const [currentAyahInRecitation, setCurrentAyahInRecitation] = useState(-1); // Start at -1, first ayah is 0
   const [sessionResults, setSessionResults] = useState<Map<number, VerificationResult>>(new Map());
   const [recognizedTexts, setRecognizedTexts] = useState<Map<number, string>>(new Map());
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showingResult, setShowingResult] = useState(false);
   
   const liveRecognition = useRef<LiveRecognition | null>(null);
   const audioRecorder = useRef<AudioRecorder | null>(null);
@@ -104,7 +105,8 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
 
     try {
       setIsListening(true);
-      setCurrentAyahInRecitation(0);
+      setCurrentAyahInRecitation(-1); // Start before first ayah
+      setShowingResult(false);
 
       // Start continuous recognition
       liveRecognition.current.start(
@@ -139,11 +141,11 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             
             console.log(`🔍 Checking Ayah ${nextAyahIndex + 1}: ${verification.accuracy.toFixed(1)}%`);
             
-            // If next ayah detected with 70%+ accuracy, move forward and RESET!
+            // If next ayah detected with 70%+ accuracy, save and STOP for review
             if (verification.accuracy >= 70) {
               const globalIndex = startIndex + nextAyahIndex;
               
-              console.log(`✅ Ayah ${nextAyahIndex + 1} DETECTED! Moving forward...`);
+              console.log(`✅ Ayah ${nextAyahIndex + 1} DETECTED! Score: ${verification.accuracy.toFixed(1)}%`);
               
               // Save the result
               setSessionResults(prev => {
@@ -158,9 +160,11 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
               });
               setCurrentAyahInRecitation(nextAyahIndex);
               
-              // 🔥 CRITICAL: RESET the recognition to clear accumulated text!
-              console.log('🔄 RESETTING recognition for next ayah...');
-              liveRecognition.current?.reset();
+              // STOP listening to show result
+              console.log('🛑 Stopping to show result...');
+              liveRecognition.current?.stop();
+              setIsListening(false);
+              setShowingResult(true);
               
             } else {
               console.log(`⏸️ Keep reciting... (${verification.accuracy.toFixed(1)}% - need 70%+)`);
@@ -330,35 +334,79 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center space-y-4">
-            {!isListening ? (
-              <Button
-                size="lg"
-                onClick={handleStartListening}
-                className="w-32 h-32 rounded-full bg-emerald-600 hover:bg-emerald-700"
-                disabled={isPlayingReference}
-              >
-                <Mic className="h-12 w-12" />
-              </Button>
+            {showingResult ? (
+              <div className="space-y-4">
+                <div className="text-lg font-semibold text-green-700">
+                  ✅ Ayah {currentAyahInRecitation + 1} Completed!
+                </div>
+                <div className="text-3xl font-bold text-emerald-600">
+                  {sessionResults.get(startIndex + currentAyahInRecitation)?.accuracy.toFixed(0)}%
+                </div>
+                {currentAyahInRecitation < sessionAyahs.length - 1 ? (
+                  <div className="space-y-2">
+                    <Button
+                      size="lg"
+                      onClick={() => {
+                        setShowingResult(false);
+                        liveRecognition.current?.reset();
+                        setTimeout(() => handleStartListening(), 500);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Continue to Ayah {currentAyahInRecitation + 2}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        const nextAyah = sessionAyahs[currentAyahInRecitation + 1];
+                        if (audioPlayer.current && nextAyah) {
+                          await audioPlayer.current.playAyah(nextAyah.surah, nextAyah.numberInSurah, 'Alafasy_128kbps');
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      Hear Next Ayah First
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-green-700 font-semibold">
+                    🎉 Session Complete!
+                  </div>
+                )}
+              </div>
+            ) : !isListening ? (
+              <div className="space-y-4">
+                <div className="text-lg font-semibold text-gray-700">
+                  Ready for Ayah {currentAyahInRecitation + 2}
+                </div>
+                <Button
+                  size="lg"
+                  onClick={handleStartListening}
+                  className="w-32 h-32 rounded-full bg-emerald-600 hover:bg-emerald-700"
+                  disabled={isPlayingReference}
+                >
+                  <Mic className="h-12 w-12" />
+                </Button>
+              </div>
             ) : (
-              <Button
-                size="lg"
-                variant="destructive"
-                onClick={handleStopListening}
-                className="w-32 h-32 rounded-full"
-              >
-                <Pause className="h-10 w-10" />
-              </Button>
-            )}
-
-            {isListening && (
-              <div className="space-y-2">
+              <div className="space-y-4">
+                <div className="text-lg font-semibold text-gray-900">
+                  Recite Ayah {currentAyahInRecitation + 2}
+                </div>
+                <Button
+                  size="lg"
+                  variant="destructive"
+                  onClick={handleStopListening}
+                  className="w-32 h-32 rounded-full"
+                >
+                  <Pause className="h-10 w-10" />
+                </Button>
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-gray-900">Listening... Recite all 10 ayahs naturally</span>
+                  <span className="text-gray-600">Listening...</span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Currently detecting: Ayah {currentAyahInRecitation + 1}
-                </p>
               </div>
             )}
           </div>
