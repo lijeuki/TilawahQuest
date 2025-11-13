@@ -85,6 +85,16 @@ export class LiveRecognition {
     };
 
     this.recognition.onerror = (event: any) => {
+      // Ignore common non-critical errors
+      const ignoredErrors = ['no-speech', 'aborted', 'audio-capture'];
+      
+      if (ignoredErrors.includes(event.error)) {
+        console.log(`⚠️ Recognition: ${event.error} (this is normal, continuing...)`);
+        return;
+      }
+      
+      // Only report critical errors
+      console.error('❌ Speech recognition error:', event.error);
       if (this.onError) {
         this.onError(new Error(`Speech recognition error: ${event.error}`));
       }

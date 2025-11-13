@@ -195,7 +195,8 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
         },
         (error) => {
           console.error('Recognition error:', error);
-          alert('Speech recognition error: ' + error.message);
+          // Don't show alert for common errors, just log them
+          // User can continue reciting
         }
       );
 
