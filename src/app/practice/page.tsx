@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { LiveRecorderComponent } from '@/components/audio/live-recorder';
 import { SurahSelector } from '@/components/quran/surah-selector';
-import { AyahPractice } from '@/components/quran/ayah-practice';
+import { SessionPractice } from '@/components/quran/session-practice';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Mic } from 'lucide-react';
+import { Layers, Mic } from 'lucide-react';
 import { getQuranData } from '@/lib/quran/data';
 import type { Surah, Ayah } from '@/types/quran';
 
-type PracticeMode = 'select' | 'free' | 'surah';
+type PracticeMode = 'select' | 'free' | 'session';
 
 export default function PracticePage() {
   const [mode, setMode] = useState<PracticeMode>('select');
@@ -27,7 +27,7 @@ export default function PracticePage() {
     const data = await getQuranData();
     const ayahs = data.ayahs.filter(ayah => ayah.surah === surahNumber);
     setSurahAyahs(ayahs);
-    setMode('surah');
+    setMode('session');
   };
 
   const handleSelectSurah = (surah: Surah) => {
@@ -77,11 +77,11 @@ export default function PracticePage() {
     );
   }
 
-  if (mode === 'surah' && selectedSurah && surahAyahs.length > 0) {
+  if (mode === 'session' && selectedSurah && surahAyahs.length > 0) {
     return (
       <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <AyahPractice 
+          <SessionPractice 
             surah={selectedSurah} 
             ayahs={surahAyahs}
             onBack={handleBackToSelect}
@@ -98,44 +98,49 @@ export default function PracticePage() {
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2 text-gray-900">Quran Recitation Practice</h1>
           <p className="text-gray-600">
-            Choose your practice mode: structured surah-by-surah or free practice
+            Choose your practice mode
           </p>
         </div>
 
         {/* Mode Selection */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 mb-8 max-w-5xl mx-auto">
           <Card 
-            className="bg-white border-2 border-gray-200 hover:border-emerald-500 cursor-pointer transition-all group"
+            className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 hover:border-emerald-500 cursor-pointer transition-all group shadow-lg"
             onClick={() => setMode('select')}
           >
             <CardHeader>
-              <BookOpen className="h-12 w-12 text-emerald-600 mb-3 group-hover:scale-110 transition-transform" />
-              <CardTitle className="text-xl text-gray-900">Surah-by-Surah</CardTitle>
-              <CardDescription className="text-gray-600">
-                <span className="font-semibold text-emerald-600">Recommended</span> - Practice ayah by ayah with word-by-word verification and highlighting
+              <div className="flex items-center gap-3 mb-2">
+                <Layers className="h-12 w-12 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  RECOMMENDED
+                </span>
+              </div>
+              <CardTitle className="text-2xl text-gray-900">10-Ayah Sessions</CardTitle>
+              <CardDescription className="text-gray-700 text-base">
+                <span className="font-semibold text-emerald-700">Like Tarteel!</span> - Hands-free continuous recitation
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-gray-700 space-y-2 mb-4">
                 <li className="flex items-start">
-                  <span className="text-emerald-600 mr-2">✓</span>
-                  Choose specific surah to practice
+                  <span className="text-emerald-600 mr-2 text-lg">✓</span>
+                  <span><strong>Practice 10 ayahs</strong> at once - natural flow</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-emerald-600 mr-2">✓</span>
-                  Word-by-word mistake detection
+                  <span className="text-emerald-600 mr-2 text-lg">✓</span>
+                  <span><strong>No button pressing</strong> - just speak!</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-emerald-600 mr-2">✓</span>
-                  Highlighted corrections
+                  <span className="text-emerald-600 mr-2 text-lg">✓</span>
+                  <span><strong>Reference audio</strong> - listen then recite</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-emerald-600 mr-2">✓</span>
-                  Progress tracking
+                  <span className="text-emerald-600 mr-2 text-lg">✓</span>
+                  <span><strong>Auto-detection</strong> - matches as you recite</span>
                 </li>
               </ul>
-              <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700">
-                Start Structured Practice
+              <Button className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
+                Start 10-Ayah Sessions
               </Button>
             </CardContent>
           </Card>
@@ -148,7 +153,7 @@ export default function PracticePage() {
               <Mic className="h-12 w-12 text-teal-600 mb-3 group-hover:scale-110 transition-transform" />
               <CardTitle className="text-xl text-gray-900">Free Practice</CardTitle>
               <CardDescription className="text-gray-600">
-                Recite any ayah freely with live recognition and instant feedback
+                Recite any ayah freely with live recognition
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -180,6 +185,8 @@ export default function PracticePage() {
         {/* Surah Selection (when mode is 'select') */}
         {mode === 'select' && (
           <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-4 text-gray-900">Select a Surah</h2>
+            <p className="text-center text-gray-600 mb-6">Choose any surah to practice 10 ayahs at a time</p>
             <SurahSelector onSelectSurah={handleSelectSurah} />
           </div>
         )}

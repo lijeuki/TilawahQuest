@@ -13,21 +13,24 @@ export default function Home() {
             TilawahQuest
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Improve your Quran recitation with AI-powered recognition and instant feedback
+            Practice 10 ayahs at a time with hands-free detection - just like Tarteel!
           </p>
-          <div className="flex gap-4">
-            <Link href="/demo">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-gray-300">
-                Watch Demo
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/practice">
+              <Button size="lg" className="text-lg px-8 py-6 bg-emerald-600 hover:bg-emerald-700">
+                <Mic className="mr-2 h-5 w-5" />
+                Start 10-Ayah Sessions
               </Button>
             </Link>
-            <Link href="/practice">
-              <Button size="lg" className="text-lg px-8 py-6">
-                <Mic className="mr-2 h-5 w-5" />
-                Start Practicing
+            <Link href="/demo">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-gray-300">
+                Watch Demo First
               </Button>
             </Link>
           </div>
+          <p className="text-sm text-gray-500 mt-4">
+            ✨ New: Continuous recitation • Reference audio • No button pressing needed
+          </p>
         </div>
 
         {/* Features */}
@@ -79,9 +82,9 @@ export default function Home() {
                   1
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1 text-gray-900">Click to Record</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900">Select a Surah</h3>
                   <p className="text-sm text-gray-600">
-                    Grant microphone permission and click the record button
+                    Choose any surah to practice - automatically divided into 10-ayah sessions
                   </p>
                 </div>
               </CardContent>
@@ -93,9 +96,9 @@ export default function Home() {
                   2
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1 text-gray-900">Recite Any Ayah</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900">Listen to Reference Audio</h3>
                   <p className="text-sm text-gray-600">
-                    Recite any verse from the Quran clearly (up to 30 seconds)
+                    Play the reference recitation for all 10 ayahs (optional but recommended)
                   </p>
                 </div>
               </CardContent>
@@ -107,9 +110,23 @@ export default function Home() {
                   3
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1 text-gray-900">Get Results</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900">Click Mic Once & Recite Continuously</h3>
                   <p className="text-sm text-gray-600">
-                    See the identified ayah, confidence score, and correct Arabic text
+                    No button pressing needed! Just recite all 10 ayahs naturally - auto-detects each one
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-gray-200">
+              <CardContent className="flex items-center p-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 text-purple-600 font-bold mr-4">
+                  4
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1 text-gray-900">Review Session Results</h3>
+                  <p className="text-sm text-gray-600">
+                    See accuracy for all 10 ayahs at once with color-coded feedback
                   </p>
                 </div>
               </CardContent>
