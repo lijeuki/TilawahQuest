@@ -8,14 +8,16 @@ export function normalizeArabicText(text: string): string {
   return text
     // Remove diacritics (harakat)
     .replace(/[\u064B-\u065F\u0670]/g, '')
-    // Normalize alef variants to simple alef
-    .replace(/[\u0622\u0623\u0625]/g, '\u0627')
+    // Normalize ALL alef variants to simple alef
+    .replace(/[\u0622\u0623\u0625\u0671]/g, '\u0627')  // Added \u0671 (Alif Wasla)
     // Normalize yaa variants
     .replace(/\u0649/g, '\u064A')
     // Normalize taa marbouta
     .replace(/\u0629/g, '\u0647')
     // Remove tatweel (kashida)
     .replace(/\u0640/g, '')
+    // Normalize hamza variants
+    .replace(/[\u0624\u0626]/g, '')  // Remove hamza on waw and yaa
     // Normalize whitespace
     .replace(/\s+/g, ' ')
     .trim()

@@ -36,13 +36,47 @@ export function verifyAyahRecitation(
   const normalizedRecited = normalizeArabicText(recitedText);
   const normalizedExpected = normalizeArabicText(expectedText);
   
+  console.log('🔍 Verifying:', {
+    recitedLength: normalizedRecited.length,
+    expectedLength: normalizedExpected.length,
+    recited: normalizedRecited.substring(0, 50),
+    expected: normalizedExpected.substring(0, 50)
+  });
+  
   // Quick check: if recited text contains significant portion of expected
-  if (normalizedRecited.length > 10 && normalizedExpected.length > 10) {
+  if (normalizedRecited.length > 5 && normalizedExpected.length > 5) {
     // Check if expected text is contained in recited (partial match)
     if (normalizedRecited.includes(normalizedExpected)) {
+      console.log('✓ Direct substring match found!');
       return {
         isCorrect: true,
         accuracy: 100,
+        wordMatches: [],
+        mistakes: []
+      };
+    }
+    
+    // Also check if expected text is contained with slight variations
+    // Split into words and check if most words are present
+    const recitedWords = normalizedRecited.split(' ');
+    const expectedWords = normalizedExpected.split(' ');
+    
+    const matchedWords = expectedWords.filter(expectedWord => 
+      recitedWords.some(recitedWord => 
+        recitedWord === expectedWord || 
+        recitedWord.includes(expectedWord) ||
+        expectedWord.includes(recitedWord)
+      )
+    );
+    
+    const wordMatchPercentage = (matchedWords.length / expectedWords.length) * 100;
+    
+    console.log(`📊 Word match: ${matchedWords.length}/${expectedWords.length} = ${wordMatchPercentage.toFixed(1)}%`);
+    
+    if (wordMatchPercentage >= 70) {
+      return {
+        isCorrect: wordMatchPercentage >= 90,
+        accuracy: wordMatchPercentage,
         wordMatches: [],
         mistakes: []
       };
