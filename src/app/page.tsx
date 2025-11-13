@@ -12,8 +12,11 @@ export default function Home() {
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
             TilawahQuest
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Practice 10 ayahs at a time with hands-free detection - just like Tarteel!
+          <p className="text-xl md:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto">
+            AI-Powered Voice Recognition to Perfect Your Quran Recitation
+          </p>
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            Practice 10 ayahs at a time with intelligent speech recognition that ensures your tilawah is recited correctly
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/practice">
@@ -29,7 +32,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-sm text-gray-500 mt-4">
-            ✨ New: Continuous recitation • Reference audio • No button pressing needed
+            ✨ AI Voice Recognition • Hands-free Detection • Real-time Feedback
           </p>
         </div>
 
@@ -38,11 +41,11 @@ export default function Home() {
           <Card className="bg-white border-gray-200">
             <CardHeader>
               <Mic className="h-12 w-12 text-emerald-600 mb-2" />
-              <CardTitle className="text-gray-900">Record & Recognize</CardTitle>
+              <CardTitle className="text-gray-900">AI Voice Recognition</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-gray-600">
-                Record your recitation and our AI will identify which ayah you&apos;re reciting with high accuracy
+                Advanced AI analyzes your voice to detect which ayah you&apos;re reciting and ensures correct pronunciation
               </CardDescription>
             </CardContent>
           </Card>
@@ -50,11 +53,11 @@ export default function Home() {
           <Card className="bg-white border-gray-200">
             <CardHeader>
               <BookOpen className="h-12 w-12 text-teal-600 mb-2" />
-              <CardTitle className="text-gray-900">Instant Feedback</CardTitle>
+              <CardTitle className="text-gray-900">Correct Your Tilawah</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-gray-600">
-                Get immediate feedback showing the correct Arabic text and pronunciation guidance
+                Real-time verification ensures your recitation matches the correct words and pronunciation of each ayah
               </CardDescription>
             </CardContent>
           </Card>
