@@ -148,8 +148,8 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
               existing: existingResult?.accuracy || 0
             });
             
-            // Track best match with lower threshold for better detection
-            if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 40) {
+            // Track best match with LOWERED threshold (40 → 30) for better detection
+            if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 30) {
               bestMatch = { index, accuracy: verification.accuracy, verification };
             }
           });
@@ -168,7 +168,8 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             // 3. It's the next expected ayah (to catch progression)
             const isProgression = bestMatch.index === currentAyahInRecitation + 1;
             const isBetterMatch = !existingResult || bestMatch.accuracy > existingResult.accuracy;
-            const shouldUpdate = isBetterMatch || (isProgression && bestMatch.accuracy > 45);
+            // LOWERED progression threshold (45 → 35) for better ayah detection
+            const shouldUpdate = isBetterMatch || (isProgression && bestMatch.accuracy > 35);
             
             if (shouldUpdate) {
               console.log(`✅ MATCHED: Ayah ${bestMatch.index + 1} with ${bestMatch.accuracy.toFixed(1)}%`);

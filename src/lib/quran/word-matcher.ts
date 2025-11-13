@@ -73,9 +73,10 @@ export function verifyAyahRecitation(
     
     console.log(`📊 Word match: ${matchedWords.length}/${expectedWords.length} = ${wordMatchPercentage.toFixed(1)}%`);
     
-    if (wordMatchPercentage >= 70) {
+    // LOWERED from 70% to 50% for better detection
+    if (wordMatchPercentage >= 50) {
       return {
-        isCorrect: wordMatchPercentage >= 90,
+        isCorrect: wordMatchPercentage >= 80,  // Still require 80% for "correct"
         accuracy: wordMatchPercentage,
         wordMatches: [],
         mistakes: []
@@ -132,9 +133,18 @@ export function verifyAyahRecitation(
         type: 'missing'
       });
     } else if (recited && expected) {
-      // Check if words match
-      const similarity = calculateWordSimilarity(recited, expected);
-      const isCorrect = similarity > 80; // 80% threshold
+      // Check if words match with IMPROVED lenient criteria
+      let similarity = calculateWordSimilarity(recited, expected);
+      
+      // Boost similarity for partial matches (substring detection)
+      if (recited.includes(expected) || expected.includes(recited)) {
+        const lengthRatio = Math.min(recited.length, expected.length) / 
+                           Math.max(recited.length, expected.length);
+        similarity = Math.max(similarity, lengthRatio * 100);
+      }
+      
+      // LOWERED threshold from 80% to 65% for better detection
+      const isCorrect = similarity > 65;
 
       if (isCorrect) {
         correctCount++;
