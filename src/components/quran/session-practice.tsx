@@ -110,41 +110,54 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
       liveRecognition.current.start(
         (result: LiveRecognitionResult) => {
           console.log('Recognition result:', result.text);
+          console.log('Partial text:', result.partialText);
           
           // Match against current session ayahs
-          if (result.text.length > 10 || result.partialText.length > 10) {
+          if (result.text.length > 5 || result.partialText.length > 5) {
             const textToMatch = (result.text + ' ' + result.partialText).trim();
             
-            // Try to match each ayah in the session
+            // Find the best matching ayah
+            let bestMatch = { index: -1, accuracy: 0 };
+            
             sessionAyahs.forEach((ayah, index) => {
               const globalIndex = startIndex + index;
               
-              // Skip if already matched with high confidence
+              // Skip if already matched with very high confidence
               const existingResult = sessionResults.get(globalIndex);
-              if (existingResult && existingResult.accuracy >= 90) {
+              if (existingResult && existingResult.accuracy >= 95) {
                 return;
               }
               
               const verification = verifyAyahRecitation(textToMatch, ayah.text);
               
-              console.log(`Ayah ${index + 1} match:`, verification.accuracy);
+              console.log(`Ayah ${index + 1} (${ayah.numberInSurah}) match:`, verification.accuracy.toFixed(1) + '%');
               
-              // Store result if accuracy is decent
-              if (verification.accuracy > 70) {
-                console.log(`Matched ayah ${index + 1} with ${verification.accuracy}% accuracy`);
-                setSessionResults(prev => {
-                  const newMap = new Map(prev);
-                  newMap.set(globalIndex, verification);
-                  return newMap;
-                });
-                setRecognizedTexts(prev => {
-                  const newMap = new Map(prev);
-                  newMap.set(globalIndex, textToMatch);
-                  return newMap;
-                });
-                setCurrentAyahInRecitation(index);
+              // Track best match
+              if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 60) {
+                bestMatch = { index, accuracy: verification.accuracy };
               }
             });
+            
+            // Store the best match if found
+            if (bestMatch.index >= 0) {
+              const globalIndex = startIndex + bestMatch.index;
+              const ayah = sessionAyahs[bestMatch.index];
+              const verification = verifyAyahRecitation(textToMatch, ayah.text);
+              
+              console.log(`✓ Best match: Ayah ${bestMatch.index + 1} with ${bestMatch.accuracy.toFixed(1)}%`);
+              
+              setSessionResults(prev => {
+                const newMap = new Map(prev);
+                newMap.set(globalIndex, verification);
+                return newMap;
+              });
+              setRecognizedTexts(prev => {
+                const newMap = new Map(prev);
+                newMap.set(globalIndex, textToMatch);
+                return newMap;
+              });
+              setCurrentAyahInRecitation(bestMatch.index);
+            }
           }
         },
         (error) => {

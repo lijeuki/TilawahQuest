@@ -14,15 +14,20 @@ export class QuranAudioPlayer {
   }
 
   /**
-   * Get audio URL for specific ayah from EveryAyah.com
+   * Get audio URL for specific ayah from multiple sources
    * Reciter: Mishary Rashid Alafasy (high quality)
    */
   getAudioUrl(surahNumber: number, ayahNumber: number, reciter: string = 'Alafasy_128kbps'): string {
     const surah = String(surahNumber).padStart(3, '0');
     const ayah = String(ayahNumber).padStart(3, '0');
     
-    // EveryAyah.com format: https://everyayah.com/data/reciter_name/surah_ayah.mp3
-    return `https://everyayah.com/data/${reciter}/${surah}${ayah}.mp3`;
+    // Try multiple sources for better reliability
+    // 1. EveryAyah CDN (primary)
+    // 2. Verses.quran.com (backup)
+    
+    // For now, using verses.quran.com which has better CORS support
+    // Format: https://verses.quran.com/Alafasy/mp3/001001.mp3
+    return `https://verses.quran.com/Alafasy/mp3/${surah}${ayah}.mp3`;
   }
 
   /**
@@ -35,10 +40,31 @@ export class QuranAudioPlayer {
 
     try {
       const url = this.getAudioUrl(surahNumber, ayahNumber, reciter);
+      console.log('Loading audio from:', url);
+      
       this.audio.src = url;
       this.currentAyah = { surah: surahNumber, ayah: ayahNumber };
       
-      await this.audio.play();
+      // Add error handler for audio loading
+      return new Promise((resolve, reject) => {
+        if (!this.audio) {
+          reject(new Error('Audio player not initialized'));
+          return;
+        }
+
+        this.audio.onloadeddata = () => {
+          console.log('Audio loaded successfully');
+          this.audio?.play().then(resolve).catch(reject);
+        };
+
+        this.audio.onerror = (e) => {
+          console.error('Audio loading error:', e);
+          reject(new Error('Failed to load audio. The audio file may not be available.'));
+        };
+
+        // Start loading
+        this.audio.load();
+      });
     } catch (error) {
       console.error('Error playing audio:', error);
       throw new Error('Failed to play reference audio. Please check your internet connection.');
