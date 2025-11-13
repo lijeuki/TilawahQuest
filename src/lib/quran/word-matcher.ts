@@ -32,11 +32,28 @@ export function verifyAyahRecitation(
   recitedText: string,
   expectedText: string
 ): VerificationResult {
-  const recitedWords = normalizeArabicText(recitedText)
+  // Normalize both texts
+  const normalizedRecited = normalizeArabicText(recitedText);
+  const normalizedExpected = normalizeArabicText(expectedText);
+  
+  // Quick check: if recited text contains significant portion of expected
+  if (normalizedRecited.length > 10 && normalizedExpected.length > 10) {
+    // Check if expected text is contained in recited (partial match)
+    if (normalizedRecited.includes(normalizedExpected)) {
+      return {
+        isCorrect: true,
+        accuracy: 100,
+        wordMatches: [],
+        mistakes: []
+      };
+    }
+  }
+  
+  const recitedWords = normalizedRecited
     .split(' ')
     .filter(w => w.length > 0);
   
-  const expectedWords = normalizeArabicText(expectedText)
+  const expectedWords = normalizedExpected
     .split(' ')
     .filter(w => w.length > 0);
 

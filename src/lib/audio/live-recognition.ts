@@ -44,12 +44,15 @@ export class LiveRecognition {
       let interim = '';
       let final = '';
 
-      // Process all results
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      // Process all results - IMPORTANT: Process ALL results, not just from resultIndex
+      for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         
         if (event.results[i].isFinal) {
-          final += transcript;
+          // Only add to accumulated if not already there
+          if (!this.accumulatedText.includes(transcript)) {
+            final += transcript;
+          }
         } else {
           interim += transcript;
         }
@@ -57,12 +60,14 @@ export class LiveRecognition {
 
       // Update accumulated text
       if (final) {
-        this.accumulatedText += ' ' + final;
+        this.accumulatedText = (this.accumulatedText + ' ' + final).trim();
         console.log('🎤 Final text added:', final);
+        console.log('📚 Total accumulated:', this.accumulatedText);
       }
       this.partialText = interim;
 
       const fullText = (this.accumulatedText + ' ' + interim).trim();
+      console.log('🔍 Full text for matching:', fullText.substring(0, 100));
 
       // Match against Quran database - lower threshold for faster detection
       if (fullText.length > 3) {

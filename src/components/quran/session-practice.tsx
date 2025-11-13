@@ -117,15 +117,19 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
           console.log('🔄 Partial Text:', partialText);
           console.log('📍 Current Ayah:', currentAyahInRecitation + 1);
           
+          // CRITICAL FIX: Use partial text if accumulated is empty!
+          const textToMatch = fullText.length > 0 
+            ? (fullText + ' ' + partialText).trim()
+            : partialText;
+            
+          console.log('🎯 Text to Match:', textToMatch.substring(0, 80));
+          console.log('📏 Text Length:', textToMatch.length);
+          
           // Only process if we have enough text
-          if (fullText.length < 3 && partialText.length < 3) {
+          if (textToMatch.length < 3) {
             console.log('⏭️ Skipping: Text too short');
             return;
           }
-          
-          // Match against current session ayahs
-          const textToMatch = (fullText + ' ' + partialText).trim();
-          console.log('🎯 Text to Match:', textToMatch.substring(0, 50) + '...');
           
           // Find the best matching ayah
           let bestMatch = { index: -1, accuracy: 0, verification: null as any };
