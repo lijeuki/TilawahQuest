@@ -241,86 +241,140 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
         </CardHeader>
       </Card>
 
-      {/* Session Progress */}
-      <Card className="bg-white border-gray-200">
+      {/* Pagination & Session Progress */}
+      <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200">
         <CardContent className="pt-6">
+          {/* Pagination for Long Surahs */}
+          {totalSessions > 1 && (
+            <div className="mb-4 pb-4 border-b-2 border-emerald-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-700">Pages</h3>
+                <span className="text-xs text-gray-600">
+                  {totalSessions} pages × 10 ayahs
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: totalSessions }, (_, i) => (
+                  <Button
+                    key={i}
+                    size="sm"
+                    variant={currentSession === i ? "default" : "outline"}
+                    onClick={() => {
+                      setCurrentSession(i);
+                      handleRetrySession();
+                    }}
+                    className={`w-12 h-12 rounded-lg font-bold ${
+                      currentSession === i
+                        ? 'bg-emerald-600 text-white shadow-lg'
+                        : 'border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Progress Bar */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">
-              Session {currentSession + 1} of {totalSessions}
+            <span className="text-sm font-semibold text-gray-700">
+              Page {currentSession + 1} Progress
             </span>
             <span className="text-sm text-gray-600">
-              Ayahs {startIndex + 1}-{endIndex} of {ayahs.length}
+              Ayahs {startIndex + 1}-{endIndex}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+          <div className="w-full bg-gray-300 rounded-full h-3 mb-2 shadow-inner">
             <div 
-              className="bg-emerald-500 h-2 rounded-full transition-all"
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full transition-all duration-500 shadow-md"
               style={{ width: `${(completedCount / sessionAyahs.length) * 100}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>{completedCount} of {sessionAyahs.length} completed</span>
+          <div className="flex justify-between text-sm font-medium">
+            <span className="text-emerald-700">{completedCount}/{sessionAyahs.length} completed</span>
             {sessionAccuracy > 0 && (
-              <span>Average: {sessionAccuracy.toFixed(0)}%</span>
+              <span className="text-teal-700">Avg: {sessionAccuracy.toFixed(0)}%</span>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Reference Audio Controls */}
-      <Card className="bg-white border-gray-200">
+      {/* Reference Audio Controls - Bundle Option */}
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
         <CardHeader>
-          <CardTitle className="text-gray-900">1. Listen to Reference</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
+              <Volume2 className="h-5 w-5 text-blue-600" />
+              Audio Options
+            </CardTitle>
+            <span className="text-xs text-gray-600">Sheikh Alafasy</span>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-3">
-            {!isPlayingReference ? (
-              <Button
-                onClick={handlePlayReference}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                disabled={isListening}
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Play All {sessionAyahs.length} Ayahs
-              </Button>
-            ) : (
-              <Button
-                onClick={handleStopReference}
-                variant="destructive"
-                className="flex-1"
-              >
-                <Pause className="h-4 w-4 mr-2" />
-                Stop
-              </Button>
-            )}
+          {/* Bundle: Play All Ayahs */}
+          <div className="p-4 bg-white rounded-lg border-2 border-blue-300 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-bold text-gray-800">Bundle: All {sessionAyahs.length} Ayahs</h3>
+                <p className="text-xs text-gray-600">Play all ayahs in sequence</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              {!isPlayingReference ? (
+                <Button
+                  onClick={handlePlayReference}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
+                  disabled={isListening}
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Play Bundle
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleStopReference}
+                  variant="destructive"
+                  className="flex-1 shadow-md"
+                >
+                  <Pause className="h-4 w-4 mr-2" />
+                  Stop Bundle
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-2">
+          {/* Playback Speed Controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-medium">Speed:</span>
             <Button
               size="sm"
               variant={playbackSpeed === 0.75 ? 'default' : 'outline'}
               onClick={() => setPlaybackSpeed(0.75)}
-              className="flex-1"
+              className={`flex-1 ${playbackSpeed === 0.75 ? 'bg-blue-600' : 'border-blue-300 text-blue-700'}`}
             >
-              0.75x
+              0.75×
             </Button>
             <Button
               size="sm"
               variant={playbackSpeed === 1 ? 'default' : 'outline'}
               onClick={() => setPlaybackSpeed(1)}
-              className="flex-1"
+              className={`flex-1 ${playbackSpeed === 1 ? 'bg-blue-600' : 'border-blue-300 text-blue-700'}`}
             >
-              1x
+              1×
             </Button>
             <Button
               size="sm"
               variant={playbackSpeed === 1.25 ? 'default' : 'outline'}
               onClick={() => setPlaybackSpeed(1.25)}
-              className="flex-1"
+              className={`flex-1 ${playbackSpeed === 1.25 ? 'bg-blue-600' : 'border-blue-300 text-blue-700'}`}
             >
-              1.25x
+              1.25×
             </Button>
           </div>
+          
+          <p className="text-xs text-gray-500 italic text-center">
+            💡 Tip: Each ayah also has its own Play button above
+          </p>
         </CardContent>
       </Card>
 
@@ -411,71 +465,17 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             )}
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-900 mb-2">
-              <strong>💡 How it works:</strong>
+          <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-4">
+            <p className="text-sm text-emerald-900 mb-2 font-semibold">
+              💡 How to Practice:
             </p>
-            <ul className="text-sm text-blue-900 space-y-1 ml-4">
-              <li>• Click the microphone button once</li>
-              <li>• Grant microphone permission when prompted</li>
-              <li>• Recite all {sessionAyahs.length} ayahs continuously (no pausing needed)</li>
-              <li>• System will automatically detect and match each ayah</li>
-              <li>• Speak clearly in Arabic for best results</li>
+            <ul className="text-sm text-emerald-800 space-y-1 ml-4">
+              <li>• Click microphone for one ayah at a time</li>
+              <li>• Recite clearly in Arabic</li>
+              <li>• System detects at 70%+ accuracy</li>
+              <li>• Review score and continue to next</li>
             </ul>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Ayahs Display with Results */}
-      <Card className="bg-white border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-gray-900">Session Ayahs</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {sessionAyahs.map((ayah, index) => {
-            const globalIndex = startIndex + index;
-            const result = sessionResults.get(globalIndex);
-            const isCurrentlyReciting = isListening && currentAyahInRecitation === index;
-            const isCurrentlyPlaying = isPlayingReference && currentAyahInRecitation === index;
-            
-            return (
-              <div
-                key={ayah.number}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  isCurrentlyReciting || isCurrentlyPlaying
-                    ? 'border-blue-500 bg-blue-50'
-                    : result && result.accuracy >= 90
-                    ? 'border-green-500 bg-green-50'
-                    : result && result.accuracy >= 70
-                    ? 'border-yellow-500 bg-yellow-50'
-                    : result
-                    ? 'border-orange-500 bg-orange-50'
-                    : 'border-gray-200'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">
-                    Ayah {ayah.numberInSurah}
-                  </span>
-                  {result && (
-                    <span className="text-sm font-bold">
-                      {result.accuracy.toFixed(0)}%
-                    </span>
-                  )}
-                </div>
-                <p className="text-2xl leading-relaxed mb-2" dir="rtl">
-                  {ayah.text}
-                </p>
-                {result && result.mistakes.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-gray-300">
-                    <p className="text-xs font-medium text-gray-600 mb-1">
-                      {result.mistakes.length} mistake(s) found
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </CardContent>
       </Card>
 
