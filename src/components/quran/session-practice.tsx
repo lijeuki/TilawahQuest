@@ -29,10 +29,10 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   
-  const liveRecognition = useRef<LiveRecognition>(new LiveRecognition());
-  const audioRecorder = useRef<AudioRecorder>(new AudioRecorder());
-  const audioPlayer = useRef<QuranAudioPlayer>(new QuranAudioPlayer());
-  const vad = useRef<VoiceActivityDetector>(new VoiceActivityDetector());
+  const liveRecognition = useRef<LiveRecognition | null>(null);
+  const audioRecorder = useRef<AudioRecorder | null>(null);
+  const audioPlayer = useRef<QuranAudioPlayer | null>(null);
+  const vad = useRef<VoiceActivityDetector | null>(null);
 
   // Calculate session boundaries
   const startIndex = currentSession * AYAHS_PER_SESSION;
@@ -41,14 +41,27 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
   const totalSessions = Math.ceil(ayahs.length / AYAHS_PER_SESSION);
 
   useEffect(() => {
+    // Initialize on client side only
+    if (typeof window !== 'undefined') {
+      liveRecognition.current = new LiveRecognition();
+      audioRecorder.current = new AudioRecorder();
+      audioPlayer.current = new QuranAudioPlayer();
+      vad.current = new VoiceActivityDetector();
+    }
+
     return () => {
-      audioPlayer.current.cleanup();
-      vad.current.stop();
-      liveRecognition.current.stop();
+      audioPlayer.current?.cleanup();
+      vad.current?.stop();
+      liveRecognition.current?.stop();
     };
   }, []);
 
   const handlePlayReference = async () => {
+    if (!audioPlayer.current) {
+      alert('Audio player not initialized yet. Please try again.');
+      return;
+    }
+
     try {
       setIsPlayingReference(true);
       setCurrentAyahInRecitation(0);
@@ -78,35 +91,57 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
   };
 
   const handleStopReference = () => {
-    audioPlayer.current.stop();
+    audioPlayer.current?.stop();
     setIsPlayingReference(false);
     setCurrentAyahInRecitation(0);
   };
 
   const handleStartListening = async () => {
+    if (!liveRecognition.current) {
+      alert('Voice detection not initialized yet. Please try again.');
+      return;
+    }
+
     try {
       setIsListening(true);
       setCurrentAyahInRecitation(0);
-      
-      // Start voice activity detection
-      await vad.current.start({
-        onVolumeChange: (volume) => {
-          setVolumeLevel(volume);
-        }
-      });
 
       // Start continuous recognition
       liveRecognition.current.start(
         (result: LiveRecognitionResult) => {
+          console.log('Recognition result:', result.text);
+          
           // Match against current session ayahs
-          if (result.text.length > 10) {
+          if (result.text.length > 10 || result.partialText.length > 10) {
+            const textToMatch = (result.text + ' ' + result.partialText).trim();
+            
+            // Try to match each ayah in the session
             sessionAyahs.forEach((ayah, index) => {
-              const verification = verifyAyahRecitation(result.text, ayah.text);
+              const globalIndex = startIndex + index;
               
-              if (verification.accuracy > 60) {
-                // Store result
-                setSessionResults(prev => new Map(prev).set(startIndex + index, verification));
-                setRecognizedTexts(prev => new Map(prev).set(startIndex + index, result.text));
+              // Skip if already matched with high confidence
+              const existingResult = sessionResults.get(globalIndex);
+              if (existingResult && existingResult.accuracy >= 90) {
+                return;
+              }
+              
+              const verification = verifyAyahRecitation(textToMatch, ayah.text);
+              
+              console.log(`Ayah ${index + 1} match:`, verification.accuracy);
+              
+              // Store result if accuracy is decent
+              if (verification.accuracy > 70) {
+                console.log(`Matched ayah ${index + 1} with ${verification.accuracy}% accuracy`);
+                setSessionResults(prev => {
+                  const newMap = new Map(prev);
+                  newMap.set(globalIndex, verification);
+                  return newMap;
+                });
+                setRecognizedTexts(prev => {
+                  const newMap = new Map(prev);
+                  newMap.set(globalIndex, textToMatch);
+                  return newMap;
+                });
                 setCurrentAyahInRecitation(index);
               }
             });
@@ -114,6 +149,7 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
         },
         (error) => {
           console.error('Recognition error:', error);
+          alert('Speech recognition error: ' + error.message);
         }
       );
 
@@ -125,17 +161,15 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
   };
 
   const handleStopListening = () => {
-    vad.current.stop();
-    liveRecognition.current.stop();
+    liveRecognition.current?.stop();
     setIsListening(false);
-    setVolumeLevel(0);
   };
 
   const handleRetrySession = () => {
     setSessionResults(new Map());
     setRecognizedTexts(new Map());
     setCurrentAyahInRecitation(0);
-    liveRecognition.current.reset();
+    liveRecognition.current?.reset();
   };
 
   const handleNextSession = () => {
@@ -296,26 +330,26 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-gray-900">Listening... Just speak naturally</span>
+                  <span className="text-gray-900">Listening... Recite all 10 ayahs naturally</span>
                 </div>
-                {/* Volume indicator */}
-                <div className="w-full max-w-md mx-auto">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 transition-all duration-100"
-                      style={{ width: `${Math.min(100, volumeLevel * 1000)}%` }}
-                    />
-                  </div>
-                </div>
+                <p className="text-sm text-gray-600">
+                  Currently detecting: Ayah {currentAyahInRecitation + 1}
+                </p>
               </div>
             )}
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-900">
-              <strong>💡 Tip:</strong> No need to press buttons! Just recite all {sessionAyahs.length} ayahs continuously. 
-              The app will automatically detect and match each ayah as you recite.
+            <p className="text-sm text-blue-900 mb-2">
+              <strong>💡 How it works:</strong>
             </p>
+            <ul className="text-sm text-blue-900 space-y-1 ml-4">
+              <li>• Click the microphone button once</li>
+              <li>• Grant microphone permission when prompted</li>
+              <li>• Recite all {sessionAyahs.length} ayahs continuously (no pausing needed)</li>
+              <li>• System will automatically detect and match each ayah</li>
+              <li>• Speak clearly in Arabic for best results</li>
+            </ul>
           </div>
         </CardContent>
       </Card>
