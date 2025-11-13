@@ -131,8 +131,9 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             return;
           }
           
-          // Find the best matching ayah
+          // Find the best matching ayah with SEQUENTIAL PRIORITY
           let bestMatch = { index: -1, accuracy: 0, verification: null as any };
+          let nextAyahMatch = { index: -1, accuracy: 0, verification: null as any };
           let allScores: any[] = [];
           
           sessionAyahs.forEach((ayah, index) => {
@@ -145,14 +146,34 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             allScores.push({
               index: index + 1,
               accuracy: verification.accuracy,
-              existing: existingResult?.accuracy || 0
+              existing: existingResult?.accuracy || 0,
+              isNext: index === currentAyahInRecitation + 1
             });
             
-            // Track best match with LOWERED threshold (40 → 30) for better detection
+            // Track next sequential ayah separately
+            if (index === currentAyahInRecitation + 1 && verification.accuracy > 30) {
+              nextAyahMatch = { index, accuracy: verification.accuracy, verification };
+            }
+            
+            // Track overall best match
             if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 30) {
               bestMatch = { index, accuracy: verification.accuracy, verification };
             }
           });
+          
+          // SMART DECISION: Prefer next ayah if score is close
+          if (nextAyahMatch.index >= 0) {
+            // If next ayah has 45%+, use it (even if not highest)
+            if (nextAyahMatch.accuracy >= 45) {
+              console.log(`🎯 Prioritizing next ayah (${nextAyahMatch.index + 1}) with ${nextAyahMatch.accuracy.toFixed(1)}%`);
+              bestMatch = nextAyahMatch;
+            }
+            // If next ayah is within 30% of best, prefer sequential progression
+            else if (bestMatch.accuracy - nextAyahMatch.accuracy <= 30) {
+              console.log(`🎯 Close scores - preferring progression: Next=${nextAyahMatch.accuracy.toFixed(1)}% vs Best=${bestMatch.accuracy.toFixed(1)}%`);
+              bestMatch = nextAyahMatch;
+            }
+          }
           
           // Show all scores
           console.table(allScores);
