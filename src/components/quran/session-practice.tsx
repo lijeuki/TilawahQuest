@@ -109,46 +109,57 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
       // Start continuous recognition
       liveRecognition.current.start(
         (result: LiveRecognitionResult) => {
-          console.log('Recognition result:', result.text);
-          console.log('Partial text:', result.partialText);
+          const fullText = result.text.trim();
+          console.log('📝 Recognition:', fullText);
+          console.log('🔄 Partial:', result.partialText);
+          
+          // Only process if we have enough text
+          if (fullText.length < 3) {
+            return;
+          }
           
           // Match against current session ayahs
-          if (result.text.length > 5 || result.partialText.length > 5) {
-            const textToMatch = (result.text + ' ' + result.partialText).trim();
+          const textToMatch = (result.text + ' ' + result.partialText).trim();
+          
+          // Find the best matching ayah
+          let bestMatch = { index: -1, accuracy: 0, verification: null as any };
+          
+          sessionAyahs.forEach((ayah, index) => {
+            const globalIndex = startIndex + index;
             
-            // Find the best matching ayah
-            let bestMatch = { index: -1, accuracy: 0 };
+            // Allow re-checking all ayahs to catch when user moves forward
+            const existingResult = sessionResults.get(globalIndex);
             
-            sessionAyahs.forEach((ayah, index) => {
-              const globalIndex = startIndex + index;
-              
-              // Skip if already matched with very high confidence
-              const existingResult = sessionResults.get(globalIndex);
-              if (existingResult && existingResult.accuracy >= 95) {
-                return;
-              }
-              
-              const verification = verifyAyahRecitation(textToMatch, ayah.text);
-              
-              console.log(`Ayah ${index + 1} (${ayah.numberInSurah}) match:`, verification.accuracy.toFixed(1) + '%');
-              
-              // Track best match
-              if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 60) {
-                bestMatch = { index, accuracy: verification.accuracy };
-              }
-            });
+            // Only skip if we're absolutely certain (98%+) and it's not the next expected ayah
+            const isNextExpected = index === currentAyahInRecitation || index === currentAyahInRecitation + 1;
+            if (existingResult && existingResult.accuracy >= 98 && !isNextExpected) {
+              return;
+            }
             
-            // Store the best match if found
-            if (bestMatch.index >= 0) {
-              const globalIndex = startIndex + bestMatch.index;
-              const ayah = sessionAyahs[bestMatch.index];
-              const verification = verifyAyahRecitation(textToMatch, ayah.text);
-              
-              console.log(`✓ Best match: Ayah ${bestMatch.index + 1} with ${bestMatch.accuracy.toFixed(1)}%`);
+            const verification = verifyAyahRecitation(textToMatch, ayah.text);
+            
+            console.log(`   Ayah ${index + 1}: ${verification.accuracy.toFixed(1)}%`);
+            
+            // Track best match with minimum threshold
+            if (verification.accuracy > bestMatch.accuracy && verification.accuracy > 50) {
+              bestMatch = { index, accuracy: verification.accuracy, verification };
+            }
+          });
+          
+          // Store the best match if found
+          if (bestMatch.index >= 0 && bestMatch.verification) {
+            const globalIndex = startIndex + bestMatch.index;
+            const existingResult = sessionResults.get(globalIndex);
+            
+            // Only update if this is a better match than what we had
+            const shouldUpdate = !existingResult || bestMatch.accuracy > existingResult.accuracy;
+            
+            if (shouldUpdate) {
+              console.log(`✅ MATCHED: Ayah ${bestMatch.index + 1} with ${bestMatch.accuracy.toFixed(1)}%`);
               
               setSessionResults(prev => {
                 const newMap = new Map(prev);
-                newMap.set(globalIndex, verification);
+                newMap.set(globalIndex, bestMatch.verification);
                 return newMap;
               });
               setRecognizedTexts(prev => {

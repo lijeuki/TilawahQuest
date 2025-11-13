@@ -58,13 +58,14 @@ export class LiveRecognition {
       // Update accumulated text
       if (final) {
         this.accumulatedText += ' ' + final;
+        console.log('🎤 Final text added:', final);
       }
       this.partialText = interim;
 
       const fullText = (this.accumulatedText + ' ' + interim).trim();
 
-      // Match against Quran database
-      if (fullText.length > 10) { // Minimum text for matching
+      // Match against Quran database - lower threshold for faster detection
+      if (fullText.length > 3) {
         const matches = await matchAyah(fullText);
         
         if (this.onUpdate) {
