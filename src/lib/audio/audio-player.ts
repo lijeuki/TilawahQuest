@@ -21,13 +21,25 @@ export class QuranAudioPlayer {
     const surah = String(surahNumber).padStart(3, '0');
     const ayah = String(ayahNumber).padStart(3, '0');
     
-    // Try multiple sources for better reliability
-    // 1. EveryAyah CDN (primary)
-    // 2. Verses.quran.com (backup)
+    // Try local files first (if downloaded), then fallback to CDN
+    // Local format: /audio/alafasy/001001.mp3
+    // CDN format: configured via NEXT_PUBLIC_AUDIO_CDN env variable
     
-    // For now, using verses.quran.com which has better CORS support
-    // Format: https://verses.quran.com/Alafasy/mp3/001001.mp3
-    return `https://verses.quran.com/Alafasy/mp3/${surah}${ayah}.mp3`;
+    // Check if running locally
+    const useLocal = typeof window !== 'undefined' && 
+                     window.location.hostname === 'localhost';
+    
+    if (useLocal) {
+      // Try local first for development
+      return `/audio/alafasy/${surah}${ayah}.mp3`;
+    }
+    
+    // Use environment variable for CDN (can be GitHub Releases, Cloudflare R2, etc.)
+    // Default to verses.quran.com if not set
+    const cdnBase = process.env.NEXT_PUBLIC_AUDIO_CDN || 
+                    'https://verses.quran.com/Alafasy/mp3';
+    
+    return `${cdnBase}/${surah}${ayah}.mp3`;
   }
 
   /**
