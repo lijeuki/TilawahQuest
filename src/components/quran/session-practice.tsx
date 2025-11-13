@@ -115,15 +115,13 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           console.log('📝 Accumulated Text:', fullText);
           console.log('🔄 Partial Text:', partialText);
-          console.log('📍 Current Ayah:', currentAyahInRecitation + 1);
+          console.log('📍 Expecting Next Ayah:', currentAyahInRecitation + 2); // Show what we're waiting for
           
-          // CRITICAL FIX: Use partial text if accumulated is empty!
-          const textToMatch = fullText.length > 0 
-            ? (fullText + ' ' + partialText).trim()
-            : partialText;
+          // Use ONLY the current accumulated text (will be reset after each ayah)
+          const textToMatch = fullText.length > 0 ? fullText : partialText;
             
-          console.log('🎯 Text to Match:', textToMatch.substring(0, 80));
-          console.log('📏 Text Length:', textToMatch.length);
+          console.log('🎯 Text to Check:', textToMatch.substring(0, 50));
+          console.log('📏 Length:', textToMatch.length);
           
           // Only process if we have enough text
           if (textToMatch.length < 3) {
@@ -139,16 +137,15 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
             const nextAyah = sessionAyahs[nextAyahIndex];
             const verification = verifyAyahRecitation(textToMatch, nextAyah.text);
             
-            console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-            console.log(`🔍 Checking ONLY next ayah: ${nextAyahIndex + 1}`);
-            console.log(`📊 Score: ${verification.accuracy.toFixed(1)}%`);
+            console.log(`🔍 Checking Ayah ${nextAyahIndex + 1}: ${verification.accuracy.toFixed(1)}%`);
             
-            // If next ayah detected with 40%+ accuracy, move forward!
-            if (verification.accuracy >= 40) {
+            // If next ayah detected with 70%+ accuracy, move forward and RESET!
+            if (verification.accuracy >= 70) {
               const globalIndex = startIndex + nextAyahIndex;
               
-              console.log(`✅ PROGRESSING to Ayah ${nextAyahIndex + 1}!`);
+              console.log(`✅ Ayah ${nextAyahIndex + 1} DETECTED! Moving forward...`);
               
+              // Save the result
               setSessionResults(prev => {
                 const newMap = new Map(prev);
                 newMap.set(globalIndex, verification);
@@ -160,11 +157,16 @@ export function SessionPractice({ surah, ayahs, onBack }: SessionPracticeProps) 
                 return newMap;
               });
               setCurrentAyahInRecitation(nextAyahIndex);
+              
+              // 🔥 CRITICAL: RESET the recognition to clear accumulated text!
+              console.log('🔄 RESETTING recognition for next ayah...');
+              liveRecognition.current?.reset();
+              
             } else {
-              console.log(`⏸️ Waiting... Score ${verification.accuracy.toFixed(1)}% too low (need 40%+)`);
+              console.log(`⏸️ Keep reciting... (${verification.accuracy.toFixed(1)}% - need 70%+)`);
             }
           } else {
-            console.log(`✅ Session complete! All ${sessionAyahs.length} ayahs detected.`);
+            console.log(`✅ SESSION COMPLETE! All ${sessionAyahs.length} ayahs detected! 🎉`);
           }
 
         },
