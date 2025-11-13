@@ -15,12 +15,19 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Improve your Quran recitation with AI-powered recognition and instant feedback
           </p>
-          <Link href="/practice">
-            <Button size="lg" className="text-lg px-8 py-6">
-              <Mic className="mr-2 h-5 w-5" />
-              Start Practicing
-            </Button>
-          </Link>
+          <div className="flex gap-4">
+            <Link href="/demo">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-gray-300">
+                Watch Demo
+              </Button>
+            </Link>
+            <Link href="/practice">
+              <Button size="lg" className="text-lg px-8 py-6">
+                <Mic className="mr-2 h-5 w-5" />
+                Start Practicing
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Features */}

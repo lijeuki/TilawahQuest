@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
+  { label: 'Demo', href: '/demo' },
   { label: 'Practice', href: '/practice' },
   { label: 'About', href: '/about' },
 ];
